@@ -1,11 +1,12 @@
 #include <iostream>
+#include <numeric>  
 
-#include "day_01.h"
+#include "day_02.h"
 
 int main(int argc, char *argv[])
 {   
     std::cout << "################################" << std::endl;
-    std::cout << "| Advent Of Code 2023 | Day 01 |" << std::endl;
+    std::cout << "| Advent Of Code 2023 | Day 02 |" << std::endl;
     std::cout << "################################" << std::endl;
     
     if(argc<=1)
@@ -13,20 +14,21 @@ int main(int argc, char *argv[])
         std::cout << "Argument needed: Input file ." << std::endl;    
         return 0;
     }
-    std::string fileName(argv[1]);
 
+    std::string fileName(argv[1]);
     try
     {
         //read input data
         auto data = readFile(fileName);
 
-        // resolve part 1
-        auto result = sumCalibrationValues(data);
-        std::cout << "result: " <<result << std::endl;
+        //Part 1
+        auto possibleGames = determinePossibleGames(data);
+        std::cout <<"sum: "<< std::accumulate(possibleGames.begin(),possibleGames.end(),0) << std::endl;
 
-        // resolve part 2
-        auto result2 = sumCalibrationValuesPart2(data);
-        std::cout << "result2: " <<result2 << std::endl;
+        //Part 2
+        auto possibleGames2 = determinePossibleGamesPart2(data);
+        std::cout <<"sum2: "<< std::accumulate(possibleGames2.begin(),possibleGames2.end(),0) << std::endl;
+
     }
     catch(const std::exception& e)
     {
