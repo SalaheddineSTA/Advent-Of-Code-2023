@@ -24,7 +24,7 @@ std::vector<unsigned> determinePossibleGames(const std::vector<std::string>& iSt
 /// @return vector of sub strings.
 std::vector<std::string> splitString(const std::string& iString, const std::string& iDelimiter);
 
-/// @brief check if char is a a digit
+/// @brief check if char is a digit
 /// @param iChar 
 /// @return true if is a digit; else false.
 bool isADigit(const char& iChar);

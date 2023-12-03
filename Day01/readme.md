@@ -13,5 +13,5 @@ git clone git@github.com:SalaheddineSTA/Advent-Of-Code-2023.git
 cd Day01
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cd build & make -j8
-./AdventCode ..Data/input.txt
+./AdventCode ../Data/input.txt
 ```

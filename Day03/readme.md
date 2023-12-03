@@ -1,5 +1,5 @@
-# Day 2
-Solution to [Day 2](https://adventofcode.com/2023/day/2).
+# Day 3
+Solution to [Day 3](https://adventofcode.com/2023/day/3).
 
 
 ## Requirements
@@ -10,7 +10,7 @@ Solution to [Day 2](https://adventofcode.com/2023/day/2).
 
 ```
 git clone git@github.com:SalaheddineSTA/Advent-Of-Code-2023.git
-cd Day02
+cd Day03
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cd build & make -j8
 ./AdventCode ../Data/input.txt
