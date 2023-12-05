@@ -1,15 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
-
-project (AdventCode)
-
 set(SOURCES
     src/day_01.cpp
     src/main.cpp
 )
 
-add_executable(AdventCode ${SOURCES})
+add_executable(solveDay01 ${SOURCES})
 
-target_include_directories(AdventCode
+target_include_directories(solveDay01
     PUBLIC 
-        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/Day01/include
 )
