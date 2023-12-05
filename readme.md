@@ -1,9 +1,7 @@
 # Advent Code 2023
-<p align="center">
 Collection of my participation to  [Advent Code 2023](https://adventofcode.com/2023/) puzzles.
-
 Made with C++.
-</p>
+
 
 ## Requirements
 - CMake >= 3.22
@@ -22,7 +20,7 @@ cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cd build && make -j8
 ```
 
-Run day XX
+Run day <dd>
 ```
-./AdventCode ../Data/input.txt
+./Day<dd>/solveDay<dd> ../Day<dd>/Data/input.txt 
 ```
