@@ -20,35 +20,49 @@ int main(int argc, char *argv[])
     std::string fileName(argv[1]);
     try
     {
-        //read input data
-        auto data = readFile(fileName);
 
-        auto winningNumbers = data.first;
-        auto playingNumbers = data.second; 
+        auto content = readFile(fileName);
+        
+        getContent(content);
+        display();
 
-        // part 1
-        auto result = countPoints(winningNumbers,playingNumbers);
-        std::cout << "result: "<< result <<std::endl;
+        lowestLocationNumbers();
 
-        // part 2
-        for (size_t ii = 0; ii < 5; ii++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            for (size_t i = 0; i < 100000; i++)
-            {
-                countPointsWithRewards(winningNumbers,playingNumbers);
-            }
-                auto end = std::chrono::high_resolution_clock::now();
-                // Calculate the duration in microseconds
-                auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start );
+        lowestLocationNumbersPart2_2();
+       
+        // std::cout << "seeds" << std::endl;
+        // display(1);
+        // std::cout << "seeds to ..." << std::endl;
+        // display(2);
 
-            // Output the duration
-            std::cout << "Time spent: " << duration.count() << " seconds" << std::endl;
-        }
+        // //read input data
+        // auto data = readFile(fileName);
+        // auto winningNumbers = data.first;
+        // auto playingNumbers = data.second; 
+
+        // // part 1
+        // auto result = countPoints(winningNumbers,playingNumbers);
+        // std::cout << "result: "<< result <<std::endl;
+
+        // // part 2
+        // for (size_t ii = 0; ii < 5; ii++)
+        // {
+        //     auto start = std::chrono::high_resolution_clock::now();
+        //     for (size_t i = 0; i < 100000; i++)
+        //     {
+        //         countPointsWithRewards(winningNumbers,playingNumbers);
+        //     }
+        //         auto end = std::chrono::high_resolution_clock::now();
+        //         // Calculate the duration in microseconds
+        //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start );
+
+        //     // Output the duration
+        //     std::cout << "Time spent: " << duration.count() << " seconds" << std::endl;
+        // }
         
        
-        auto result2 = countPointsWithRewards(winningNumbers,playingNumbers);
-        std::cout << "result2: "<< result2 <<std::endl;
+        // auto result2 = countPointsWithRewards(winningNumbers,playingNumbers);
+        // std::cout << "result2: "<< result2 <<std::endl;
         
     }
     catch(const std::exception& e)

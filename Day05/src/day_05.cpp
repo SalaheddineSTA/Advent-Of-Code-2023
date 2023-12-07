@@ -5,134 +5,451 @@
 #include <sstream>
 #include <algorithm>
 #include <numeric>
+#include <limits>
 
 #include "day_05.h"
 
-std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<unsigned>>> readFile(const std::string &iFilePath)
-{
+std::vector<long> seeds;
+std::vector<std::pair<long,long>> seedsPairs;
+std::vector<std::tuple<long,long,bool>> seedsTupls;
+std::vector<std::vector<std::tuple<long, long, long>>> allMaps;
 
-    // Open the file
+std::string readFile(const std::string &iFilePath)
+{
+     // Open the file
     std::ifstream inputFile(iFilePath);
 
     // Check if the file is open
     if (!inputFile.is_open())
         throw std::invalid_argument("File <" + iFilePath + "> doesn't exists.");
 
-    // Read the file line by line and store each line in a vector of strings
-    std::vector<std::vector<unsigned>> winningNumbers;
-    std::vector<std::vector<unsigned>> playingNumbers;
+    // Get conent from file
+    std::string content((std::istreambuf_iterator<char>(inputFile) ),
+                       (std::istreambuf_iterator<char>()));
 
+    return content;
+}
+
+void getContent(const std::string &iContent)
+{
+    // read first line (seeds)
+    // and put the numbers into a vector
+    auto posSeeds = iContent.find("seeds:");
+    auto posSeedToSoil = iContent.find("seed-to-soil map:");
+
+    long number;
+    std::stringstream ss(iContent.substr(posSeeds+6,posSeedToSoil-posSeeds+6));
+    while (ss >> number) {
+        seeds.push_back(number);
+    }
+
+    std::stringstream leftContent(iContent.substr(posSeedToSoil,iContent.size()-posSeedToSoil));
+
+    std::vector<std::tuple<long,long,long>> map;
     std::string line;
-    while (std::getline(inputFile, line))
+    // jump the first lien
+    std::getline(leftContent,line);
+    //loop on the rest 
+    while(std::getline(leftContent,line))
     {
-        auto pos = line.find(":");
-        if (pos != line.npos)
+        // if not empty line
+        if(line != "")
         {
-            // remove Card Ids
-            auto subString = line.substr(pos + 1, line.size());
+            // get numbers as tuple and push them into a vector
+            long destinationRangeStart, sourceRangeStart, rengeLength;
+            std::stringstream ss(line);
+            ss >> destinationRangeStart >> sourceRangeStart >> rengeLength;
 
-            // split the line 
-            auto pos2 = subString.find("|");
-            if (pos2 != subString.npos)
-            {
-                std::string winningNumbersString = subString.substr(0, pos2);
-                std::string playingNumbersString = subString.substr(pos2 + 1, subString.size());
-
-                std::istringstream winningStreamString(winningNumbersString);
-                std::istringstream playingStreamString(playingNumbersString);
-
-                // create a list of winning numbers
-                std::vector<unsigned> winningNumberByLine;
-                unsigned winningNum;
-                while (winningStreamString >> winningNum)
-                {
-                    winningNumberByLine.push_back(winningNum);
-                }
-                winningNumbers.push_back(winningNumberByLine);
-
-                // create a list of playing numbers
-                std::vector<unsigned> playingNumberByLine;
-                unsigned playingNum;
-                while (playingStreamString >> playingNum)
-                {
-                    playingNumberByLine.push_back(playingNum);
-                }
-                playingNumbers.push_back(playingNumberByLine);
-            }
+            std::tuple t = std::make_tuple(destinationRangeStart, sourceRangeStart, rengeLength);
+            map.push_back(t);
+        }
+        else // if the line is empty
+        {
+            //jump the text after empty line
+            std::getline(leftContent,line);
+            //insert the map  into a vector
+            allMaps.push_back(map);
+            map.clear();
         }
     }
 
-    // Close the file
-    inputFile.close();
+    allMaps.push_back(map);
 
-    return std::make_pair(winningNumbers, playingNumbers);
 }
 
-unsigned countPoints(const std::vector<std::vector<unsigned>> &iwinning, const std::vector<std::vector<unsigned>> &iPlaying)
+void lowestLocationNumbers()
 {
-
-    auto sum = 0;
-    auto pointsTotalPerCard = 0;
-    // loop on cards
-    for (auto i = 0; i < iPlaying.size(); i++)
+    auto lowestLocation = std::numeric_limits<long>::max();
+    
+    for(auto seed: seeds)
     {
-        //for each number in each card
-        for (auto &num : iPlaying[i])
+        for(auto &map : allMaps)
         {
-            //check if it is in the winning list
-            auto found = std::find(iwinning[i].begin(), iwinning[i].end(), num);
-            if (found != iwinning[i].end())
+
+            for(auto &coordinates: map)
             {
-                // if it is the first, count 1
-                if (pointsTotalPerCard == 0)
+                
+                auto destinationRangeStart = std::get<0>(coordinates);
+                auto sourceRangeStart = std::get<1>(coordinates);
+                auto rengeLength = std::get<2>(coordinates);
+
+                if((seed >= sourceRangeStart)  && (seed < (sourceRangeStart + rengeLength)))
                 {
-                    pointsTotalPerCard = 1;
-                }
-                // if not the first double the points
-                else
-                {
-                    pointsTotalPerCard *= 2;
+                    seed += destinationRangeStart - sourceRangeStart;                 
+                    break;
                 }
             }
         }
-        // sum the total
-        sum += pointsTotalPerCard;
-        pointsTotalPerCard = 0;
+
+      
+         lowestLocation = std::min(static_cast<long>(seed),lowestLocation);
     }
-    return sum;
+
+   std::cout << "lowest map location: " << lowestLocation << std::endl;
+
 }
 
-unsigned countPointsWithRewards(const std::vector<std::vector<unsigned>> &iwinning, const std::vector<std::vector<unsigned>> &iPlaying)
+void lowestLocationNumbersPart2()
 {
-    // rewards are the copies number
-    auto rewards = std::vector<unsigned>(iPlaying.size(), 1);
-    auto sum =0;
-    auto winNumberCounter = 0;
 
-    // loop on the cards
-    for (auto i = 0; i < iPlaying.size(); i++)
+    int error = 0;
+    //create pairs
+    for(auto i =0; i<seeds.size()-1;i+=2)
     {
-        //for each number in each card
-        for (auto &num : iPlaying[i])
+        seedsPairs.push_back(std::make_pair(seeds[i],seeds[i]+seeds[i+1]));
+        std::cout << "original seeds: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;
+    }
+
+    auto lowestLocation = std::numeric_limits<long>::max();
+    
+    for(auto &map : allMaps)
+   
+    {
+         for(auto i = 0; i<seedsPairs.size(); i++)
         {
-            // check if the num it is in the winning list
-            auto found = std::find(iwinning[i].begin(), iwinning[i].end(), num);
-            if (found != iwinning[i].end())
+             int mapN =0;
+            for(auto &coordinates: map)
             {
-                winNumberCounter++; // count the number of winning numbers per card
+                                
+                auto destinationRangeStart = std::get<0>(coordinates);
+                auto sourceRangeStart = std::get<1>(coordinates);
+                auto rengeLength = std::get<2>(coordinates);
+                
+                auto offset = destinationRangeStart - sourceRangeStart;
+
+                auto sourceRangeEnd = sourceRangeStart + rengeLength;
+
+                //start and end for each pair
+                auto seedStart = seedsPairs[i].first;
+                auto seedEnd = seedsPairs[i].second;
+
+                // make a copy of the pair need it for some updates
+                auto seedsPairsCopy = seedsPairs[i];
+
+                // GREEN
+                if((seedStart >= sourceRangeStart)  && (seedEnd < (sourceRangeEnd)) )
+                {
+                    std::cout << "." ;
+                    seedStart += offset;
+                    seedEnd += offset;
+                   // std::cout << "GREEN before: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl; 
+                    seedsPairs[i].first += offset;
+                    seedsPairs[i].second += offset; 
+                       
+                    //seedsPairs[i] = std::make_pair(seedStart,seedEnd);  
+                    //std::cout << "GREEN after: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;    
+                    break;
+
+                }
+                // PINK
+                else if((seedStart >= sourceRangeStart)  && (seedStart < (sourceRangeEnd)))
+                {
+                    std::cout << "#" ;
+                    seedEnd = sourceRangeEnd - 1;
+                    seedStart += offset;
+                    seedEnd += offset;
+                    seedsPairs[i] = std::make_pair(seedStart, seedEnd);
+                     
+                    //std::cout << "PINK: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;    
+
+                    //copy the rest to the seeds
+                    seedStart = sourceRangeEnd;
+                    seedEnd = seedsPairsCopy.second;
+                    seedsPairs.push_back(std::make_pair(seedStart,seedEnd));
+                    if(seedStart == 110)
+                    {
+                        std::cout << "pink" <<std::endl;
+                        return;
+                    }
+                    break;
+                }
+                //BLUE
+                else if((seedEnd >= sourceRangeStart)  && (seedEnd < (sourceRangeEnd)))
+                {
+                    std::cout << "*" ;
+                    error++;
+                    if(error >1000)
+                    {
+                         std::cout << "seedStart: " << seedStart << "\n";
+                         std::cout << "seedEnd: " << seedEnd << "\n";
+                         std::cout << "sourceRangeStart: " << sourceRangeStart << "\n";
+                         std::cout << "sourceRangeEnd: " << sourceRangeEnd << "\n";
+                          std::cout << "seeds: \n";
+                        for(auto j = 0; j<seedsPairs.size(); j++)
+                        {
+                            std::cout << "" << seedsPairs[j].first << " " << seedsPairs[j].second << " | ";
+                        }
+                        return;
+                    }
+                    seedStart = sourceRangeStart + offset;
+                    seedEnd += offset;
+                    seedsPairs[i] = std::make_pair(seedStart,seedEnd);
+
+                    //std::cout << "BLUE: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;    
+
+                    //copy the rest to the seeds
+                    seedStart = seedsPairsCopy.first;
+                    seedEnd = sourceRangeEnd - 1;
+                    seedsPairs.push_back(std::make_pair(seedStart,seedEnd));
+                    if(seedStart == 110)
+                    {
+                        std::cout << "blue" <<std::endl;
+                        return;
+                    }
+                    break;
+                }
+                //PURPULE
+                else if((seedStart < sourceRangeStart)  && (seedEnd >= (sourceRangeEnd)))
+                {
+                    std::cout << "-" ;
+                    seedStart = sourceRangeStart + offset;
+                    seedEnd = sourceRangeEnd + offset -1;
+                    seedsPairs[i] = std::make_pair(seedStart,seedEnd);
+
+                    // before
+                    seedStart = seedsPairsCopy.first;
+                    seedEnd = sourceRangeStart - 1;
+                    seedsPairs.push_back(std::make_pair(seedStart,seedEnd));
+                    if(seedStart == 110)
+                    {
+                        std::cout << "purpule" <<std::endl;
+                        return;
+                    }
+
+                    // after
+                    seedStart = sourceRangeEnd;
+                    seedEnd = seedsPairsCopy.second;
+                    seedsPairs.push_back(std::make_pair(seedStart,seedEnd));
+                    if(seedStart == 110)
+                    {
+                        std::cout << "purpule 2" <<std::endl;
+                        return;
+                    }
+                    break;
+                }
+                //RED
+                else{
+                    std::cout << "+" ;
+                    //break;
+                }
+            }
+            
+        }
+
+        std::cout << "_________________________" << std::endl;
+        for(auto j = 0; j<seedsPairs.size(); j++)
+        {
+            std::cout << "" << seedsPairs[j].first << " " << seedsPairs[j].second << " | ";
+        }
+            std::cout << "_________________________" << std::endl;
+        //mapN++;
+
+        // lowestLocation = std::min(seedsPairs[i].first,lowestLocation);
+        // std::cout << "lowest map location: " << lowestLocation << std::endl;
+        // std::cout << "seedsPairs[i]: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;
+
+    }
+
+   std::cout << "lowest map location: " << lowestLocation << std::endl;
+
+}
+
+void lowestLocationNumbersPart2_2()
+{
+
+    int error = 0;
+    // create pairs
+    for (auto i = 0; i < seeds.size() - 1; i += 2)
+    {
+        seedsTupls.push_back(std::make_tuple(seeds[i], seeds[i] + seeds[i + 1], false));
+    }
+
+    auto lowestLocation = std::numeric_limits<long>::max();
+
+    for (auto &map : allMaps)
+    {
+        std::cout << "new map \n";
+        
+        for (auto i = 0; i < seedsTupls.size(); i++)
+        {
+            if(!std::get<2>(seedsTupls[i]))
+            {
+                for (auto &coordinates : map)
+                {
+                    auto destinationRangeStart = std::get<0>(coordinates);
+                    auto sourceRangeStart = std::get<1>(coordinates);
+                    auto rengeLength = std::get<2>(coordinates);
+
+                    auto offset = destinationRangeStart - sourceRangeStart;
+
+                    auto sourceRangeEnd = sourceRangeStart + rengeLength;
+
+                    // start and end for each pair
+                    auto seedStart = std::get<0>(seedsTupls[i]);
+                    auto seedEnd = std::get<1>(seedsTupls[i]);
+
+                    // make a copy of the pair need it for some updates
+                    auto seedsTuplsCopy = seedsTupls[i];
+                    
+                    // std::cout << "start, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) <<"; "  << std::get<2>(seedsTupls[i])  << "\n";
+                    // std::cout << "start, from " << seedStart << " to " << seedEnd << "\n";
+
+                    // GREEN
+                    if ((seedStart >= sourceRangeStart) && (seedEnd < (sourceRangeEnd)))
+                    {
+                        std::cout << "green, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) << "\n";
+                        std::cout << ".";
+                        seedStart += offset;
+                        seedEnd += offset;
+
+                        //std::cout << "green, from " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]) << "\n";
+                        seedsTupls[i] = std::make_tuple(seedStart, seedEnd, true);
+                        //std::cout << "to " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]);
+                        
+
+                        break;
+                    }
+                    // PINK
+                    else if ((seedStart >= sourceRangeStart) && (seedStart < (sourceRangeEnd)) && (seedEnd >= (sourceRangeEnd)))
+                    {
+                        std::cout << "pink, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) << "\n";
+                        std::cout << "#";
+                        seedEnd = sourceRangeEnd - 1;
+                        seedStart += offset;
+                        seedEnd += offset;
+
+                        //std::cout << "pink, from " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]) << "\n";
+                        seedsTupls[i] = std::make_tuple(seedStart, seedEnd, true);
+                        //std::cout << "to " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]);
+
+                        // copy the rest to the seeds
+                        seedStart = sourceRangeEnd;
+                        seedEnd = std::get<1>(seedsTuplsCopy);
+                        std::cout << "inserted pink, from " << seedStart << " to " << seedEnd  << "\n";
+                        seedsTupls.push_back(std::make_tuple(seedStart, seedEnd, false));
+                
+                        break;
+                    }
+                    // BLUE
+                    else if ((seedEnd >= sourceRangeStart) && (seedEnd < (sourceRangeEnd)))
+                    {
+                        std::cout << "blue before, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) << "\n";
+
+                        std::cout << "seedsTuplsCopy,  " << std::get<0>(seedsTuplsCopy) << " to " << std::get<1>(seedsTuplsCopy) << "\n";
+                        //std::cout << "*";
+                        error++;
+                        //   std::cout << "_________________________" << std::endl;
+                        // for (auto j = 0; j < seedsTupls.size(); j++)
+                        // {
+                        //     std::cout << "" << std::get<0>(seedsTupls[j]) << " " << std::get<1>(seedsTupls[j]) << "; " <<std::get<2>(seedsTupls[j]) << " | " ; 
+                        // }
+                        // std::cout << "_________________________" << std::endl;
+         
+                        seedStart = sourceRangeStart + offset;
+                        seedEnd += offset;
+                        //std::cout << "pink, from " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]) << "\n";
+                        seedsTupls[i] = std::make_tuple(seedStart, seedEnd,true);
+                        //std::cout << "pink, from " << std::get<0>(seedsTupls[i]) << " " << std::get<1>(seedsTupls[i]) << "\n";
+
+                        // std::cout << "BLUE: " << seedsTupls[i].first << " " << seedsTupls[i].second << std::endl;
+
+                        // copy the rest to the seeds
+                        seedStart =  std::get<0>(seedsTuplsCopy);
+                        seedEnd = sourceRangeStart - 1;
+                        std::cout << "inserted blue, from " << seedStart << " to " << seedEnd  << "\n";
+                        seedsTupls.push_back(std::make_tuple(seedStart, seedEnd, false));
+                        
+                
+                        break;
+                    }
+                    // PURPULE
+                    else if ((seedStart < sourceRangeStart) && (seedEnd >= (sourceRangeEnd)))
+                    {
+                        std::cout << "purpule, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) << "\n";
+                        std::cout << "-";
+                        seedStart = sourceRangeStart + offset;
+                        seedEnd = sourceRangeEnd + offset - 1;
+                        seedsTupls[i] = std::make_tuple(seedStart, seedEnd,true);
+
+                        // before
+                        seedStart = std::get<0>(seedsTuplsCopy);
+                        seedEnd = sourceRangeStart - 1;
+                        std::cout << "inserted puroule, from " << seedStart << " to " << seedEnd  << "\n";
+                        seedsTupls.push_back(std::make_tuple(seedStart, seedEnd,false));
+                
+                        // after
+                        seedStart = sourceRangeEnd;
+                        seedEnd = std::get<1>(seedsTuplsCopy);
+                        std::cout << "inserted puroule, from " << seedStart << " to " << seedEnd  << "\n";
+                        seedsTupls.push_back(std::make_tuple(seedStart, seedEnd,false));
+                
+                        break;
+                    }
+                    // RED
+                    else
+                    {
+                        std::cout << "red, from " << std::get<0>(seedsTupls[i]) << " to " << std::get<1>(seedsTupls[i]) << "\n";
+                        std::cout << "+";
+                        // break;
+                    }
+                }
             }
         }
 
-        // if a card have a winning number
-        // reward the "winNumberCounter" next cards (make copies)
-        for (auto l = 0; l < winNumberCounter; l++)
+        std::cout << "_________________________" << std::endl;
+        for (auto j = 0; j < seedsTupls.size(); j++)
         {
-            //for each copy we do the same (thats why i added rewards[i] -> number of copies in i_th card)
-            rewards[i + l + 1] += rewards[i];
+            std::cout << "" << std::get<0>(seedsTupls[j]) << " " << std::get<1>(seedsTupls[j]) << " | ";
+
+            std::get<2>(seedsTupls[j]) = false;
         }
-        winNumberCounter = 0;
-        sum += rewards[i];
+        std::cout << "_________________________" << std::endl;
+        // mapN++;
+
+        // lowestLocation = std::min(seedsPairs[i].first,lowestLocation);
+        // std::cout << "lowest map location: " << lowestLocation << std::endl;
+        // std::cout << "seedsPairs[i]: " << seedsPairs[i].first << " " << seedsPairs[i].second << std::endl;
     }
 
-    return sum;
+    std::cout << "lowest map location: " << lowestLocation << std::endl;
+}
+
+
+void display()
+{
+    for (auto n: seeds)
+    {
+        std::cout << n << " ";
+    }
+    std::cout << "\n";
+
+    for (auto v: allMaps)
+    {
+        for (auto t: v)
+        {
+            std::cout << std::get<0>(t) <<" " <<std::get<1>(t) <<  " " <<std::get<2>(t) << "\n";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
 }
