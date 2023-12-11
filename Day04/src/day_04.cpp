@@ -102,7 +102,8 @@ unsigned countPoints(const std::vector<std::vector<unsigned>> &iwinning, const s
     return sum;
 }
 
-unsigned countPointsWithRewards(const std::vector<std::vector<unsigned>> &iwinning, const std::vector<std::vector<unsigned>> &iPlaying)
+unsigned countPointsWithRewards(const std::vector<std::vector<unsigned>> &iwinning,
+ const std::vector<std::vector<unsigned>> &iPlaying)
 {
     // rewards are the copies number
     auto rewards = std::vector<unsigned>(iPlaying.size(), 1);

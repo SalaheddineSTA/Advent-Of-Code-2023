@@ -7,7 +7,7 @@
 /// @return 
 std::string readFile(const std::string &iFilePath);
 
-/// @brief reac content into vectors
+/// @brief read content into vectors
 /// @param iContent 
 void getContent(const std::string& iContent);
 
